@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Jeu du Pendu</title>
+    <style>
+        body {
+            background-color: #1D3557;
+            color: #F1FAEE;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-top: 40px;
+        }
+
+        .game-container {
+            margin: 40px auto;
+            width: 400px;
+            padding: 20px;
+            background-color: #457B9D;
+            border-radius: 10px;
+        }
+
+        .word-label {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .alphabet-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .alphabet-buttons button {
+            width: 30px;
+            height: 30px;
+            margin: 5px;
+            background-color: #A8DADC;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            color: #1D3557;
+            cursor: pointer;
+        }
+
+        .letter-labels {
+            margin-top: 20px;
+        }
+
+        .result-message {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        .restart-button {
+            margin-top: 20px;
+            background-color: #E63946;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 18px;
+            color: #F1FAEE;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Jeu du Pendu</h1>
+    <div id="gameContainer" class="game-container"></div>
+
+    <script>
+        // Configuration du jeu
+        var words = [
+            "PROGRAMMATION",
+            "INFORMATIQUE",
+            "DEVELOPPEMENT",
+            "ALGORITHME",
+            "STRUCTURE",
+            "JAVA",
+            "PYTHON",
+            "CODAGE"
+        ];
+        var maxAttempts = 9;
+
+        // Éléments du DOM
+        var gameContainer = document.getElementById('gameContainer');
+        var wordLabel = document.createElement('div');
+        wordLabel.className = 'word-label';
+        gameContainer.appendChild(wordLabel);
+        var alphabetButtons = document.createElement('div');
+        alphabetButtons.className = 'alphabet-buttons';
+        gameContainer.appendChild(alphabetButtons);
+        var letterLabels = document.createElement('div');
+        letterLabels.className = 'letter-labels';
+        gameContainer.appendChild(letterLabels);
+
+        // Variables du jeu
+        var targetWord = '';
+        var guessedLetters = [];
+        var attemptsLeft = maxAttempts;
+
+        // Initialisation du jeu
+        initializeGame();
+
+        // Fonction pour initialiser le jeu
+        function initializeGame() {
+            // Réinitialiser les variables du jeu
+            targetWord = getRandomWord();
+            guessedLetters = [];
+            attemptsLeft = maxAttempts;
+
+            // Afficher le mot à deviner
+            var wordProgress = '';
+            for (var i = 0; i < targetWord.length; i++) {
+                wordProgress += '_ ';
+            }
+            wordLabel.textContent = wordProgress;
+
+            // Afficher les boutons de l'alphabet
+            alphabetButtons.innerHTML = '';
+            for (var letter = 65; letter <= 90; letter++) {
+                var button = document.createElement('button');
+                button.textContent = String.fromCharCode(letter);
+                button.addEventListener('click', handleLetterClick);
+                alphabetButtons.appendChild(button);
+            }
+
+            // Réinitialiser les lettres déjà devinées
+            letterLabels.innerHTML = '';
+        }
+
+        // Fonction pour gérer le clic sur une lettre de l'alphabet
+        function handleLetterClick(event) {
+            var letter = event.target.textContent;
+            event.target.disabled = true;
+            checkLetter(letter);
+        }
+
+        // Fonction pour vérifier si la lettre est présente dans le mot cible
+        function checkLetter(letter) {
+            var letterFound = false;
+            for (var i = 0; i < targetWord.length; i++) {
+                if (targetWord[i] === letter) {
+                    letterFound = true;
+                    guessedLetters[i] = letter;
+                }
+            }
+
+            if (letterFound) {
+                updateWordLabel();
+                if (isWordGuessed()) {
+                    endGame(true);
+                }
+            } else {
+                attemptsLeft--;
+                updateLetterLabels(letter);
+                if (attemptsLeft === 0) {
+                    endGame(false);
+                }
+            }
+        }
+
+        // Fonction pour mettre à jour l'affichage du mot à deviner
+        function updateWordLabel() {
+            var wordProgress = '';
+            for (var i = 0; i < targetWord.length; i++) {
+                if (guessedLetters[i]) {
+                    wordProgress += guessedLetters[i] + ' ';
+                } else {
+                    wordProgress += '_ ';
+                }
+            }
+            wordLabel.textContent = wordProgress;
+        }
+
+        // Fonction pour mettre à jour l'affichage des lettres déjà devinées
+        function updateLetterLabels(letter) {
+            var label = document.createElement('span');
+            label.textContent = letter + ' ';
+            letterLabels.appendChild(label);
+        }
+
+        // Fonction pour vérifier si le mot a été entièrement deviné
+        function isWordGuessed() {
+            for (var i = 0; i < targetWord.length; i++) {
+                if (!guessedLetters[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Fonction pour terminer le jeu
+        function endGame(isWin) {
+            // Désactiver tous les boutons de l'alphabet
+            var buttons = alphabetButtons.getElementsByTagName('button');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].disabled = true;
+            }
+
+            // Afficher le message de victoire ou de défaite
+            var message = document.createElement('p');
+            message.className = 'result-message';
+            message.textContent = isWin ? 'Félicitations ! Vous avez deviné le mot !' : 'Dommage... Vous avez épuisé toutes vos tentatives. Le mot était : ' + targetWord;
+            gameContainer.appendChild(message);
+
+            // Afficher le bouton pour recommencer le jeu
+            var restartButton = document.createElement('button');
+            restartButton.className = 'restart-button';
+            restartButton.textContent = 'Recommencer';
+            restartButton.addEventListener('click', initializeGame);
+            gameContainer.appendChild(restartButton);
+        }
+
+        // Fonction pour obtenir un mot aléatoire parmi la liste des mots
+        function getRandomWord() {
+            var index = Math.floor(Math.random() * words.length);
+            return words[index];
+        }
+    </script>
+</body>
+</html>
